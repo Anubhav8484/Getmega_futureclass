@@ -68,13 +68,13 @@ func result (f *Future,timeout time.Duration)  interface{} {
 
 //Exception function when timeout is  given
 func exception(f *Future,timeout time.Duration) error{
-     if f.Cancelled {
-		return errors.New("Cancelled")
+        if f.Cancelled {
+	   return errors.New("Cancelled")
 	}
 	if f.Done{
 	   return nil
 	}
-    timeoutChannel := time.After(timeout)
+        timeoutChannel := time.After(timeout)
 	select {
 	case <-f.InterfaceChannel:
 		return nil
@@ -86,13 +86,10 @@ func exception(f *Future,timeout time.Duration) error{
 
 //Exception function when timeout is not given
 func (f *Future) exception() error{
-     if f.Cancelled {
-		return errors.New("Cancelled")
+        if f.Cancelled {
+	    return errors.New("Cancelled")
 	}
-	if f.Done{
-	   return nil
-	}
-    if(f.Running){
+        if(f.Running){
 	   return errors.New("Invalid state")
 	}
 	return nil
