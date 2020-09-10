@@ -3,6 +3,7 @@ package gofuture
 import (
 	"reflect"
 	"time"
+	"errors"
 )
 
 type Future struct {
@@ -41,7 +42,7 @@ func (f *Future) done() bool{
 
 //result function when timeout is not given
 func (f *Future) result() interface{} {
-	if f.Done {
+	if (f.Done || f.Cancelled) {
 		return f.result
 	}
 	f.Result = <-f.InterfaceChannel
@@ -50,7 +51,7 @@ func (f *Future) result() interface{} {
 
 //result function when timeout is  given
 func result (f *Future,timeout time.Duration)  interface{} {
-	if f.Done {
+	if (f.Done || f.Cancelled) {
 		return f.Result
 	}
 	timeoutChannel := time.After(timeout)
@@ -63,6 +64,39 @@ func result (f *Future,timeout time.Duration)  interface{} {
 		f.Done = true
 	}
 	return f.Result
+}
+
+//Exception function when timeout is  given
+func exception(f *Future,timeout time.Duration) error{
+     if f.Cancelled {
+		return errors.New("Cancelled")
+	}
+	if f.Done{
+	   return nil
+	}
+    timeoutChannel := time.After(timeout)
+	select {
+	case <-f.InterfaceChannel:
+		return nil
+	case <-timeoutChannel:
+		return errors.New("Timeout")
+	}
+
+}
+
+//Exception function when timeout is not given
+func (f *Future) exception() error{
+     if f.Cancelled {
+		return errors.New("Cancelled")
+	}
+	if f.Done{
+	   return nil
+	}
+    if(f.Running){
+	   return errors.New("Invalid state")
+	}
+	return nil
+
 }
 
 //submit function
